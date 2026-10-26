@@ -1,0 +1,20 @@
+# Environment secrets
+.env
+*.env
+backend/.env
+
+# Python virtual environment
+.venv/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini

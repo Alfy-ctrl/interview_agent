@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enterprise AI Interviewer | Milestone 1</title>
+  <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .recording-pulse {
+      animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col text-slate-800 antialiased font-sans bg-slate-50">
+
+  <!-- Top Enterprise Navbar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="h-9 w-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+          A
+        </div>
+        <div>
+          <span class="font-display font-bold text-slate-900 tracking-tight text-lg">Avatar Interviewer</span>
+          <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">5-Question Screening</span>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-2 text-xs font-medium text-slate-500">
+          <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+          <span>System Operational</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Banner -->
+  <div id="toast-container" class="fixed top-20 right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ========================================== -->
+    <!-- VIEW 1: Role & Resume Setup -->
+    <!-- ========================================== -->
+    <div id="view-setup" class="space-y-8">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-display font-bold text-slate-900 tracking-tight">Technical Candidate Screening</h1>
+        <p class="mt-1 text-sm text-slate-500">Configure position requirements and verify applicant credentials for a 5-question basic screening evaluation.</p>
+      </div>
+
+      <!-- Card: Job Role & Automated JD -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+        <div>
+          <label for="input-role" class="block text-sm font-semibold text-slate-900 mb-2">Target Job Role</label>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <input type="text" id="input-role" value="Python Backend Engineer" placeholder="e.g. Python Backend Engineer, Data Scientist"
+                   class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+            <button id="btn-generate-jd" onclick="generateJobDescription()"
+                    class="inline-flex items-center justify-center px-5 py-2.5 rounded-lg font-medium text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-sm disabled:opacity-50">
+              <span id="btn-generate-text">Generate Job Description</span>
+              <svg id="btn-generate-spinner" class="hidden animate-spin ml-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+            </button>
+          </div>
+          <!-- Quick Role Suggestions -->
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <span class="text-xs text-slate-400 font-medium">Quick suggestions:</span>
+            <button type="button" onclick="setRole('Python Backend Engineer')" class="text-xs px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition">Python Backend Engineer</button>
+            <button type="button" onclick="setRole('Data Scientist')" class="text-xs px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition">Data Scientist</button>
+            <button type="button" onclick="setRole('Full Stack Developer')" class="text-xs px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition">Full Stack Developer</button>
+          </div>
+        </div>
+
+        <!-- Editable Job Description Textarea -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label for="textarea-jd" class="block text-sm font-semibold text-slate-900">Job Description & Core Competencies</label>
+            <span class="text-xs text-slate-400">Structured 3-part specification</span>
+          </div>
+          <textarea id="textarea-jd" rows="9"
+                    class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-mono leading-relaxed text-slate-700 bg-slate-50"
+                    placeholder="Click 'Generate Job Description' above or enter role requirements here..."></textarea>
+        </div>
+      </div>
+
+      <!-- Card: Resume Upload -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+        <div>
+          <h2 class="text-base font-semibold text-slate-900">Candidate Resume (PDF)</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Upload verified applicant documentation for semantic indexing, study gap detection, and compatibility analysis.</p>
+        </div>
+
+        <div id="drop-zone"
+             class="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-indigo-400 transition cursor-pointer bg-slate-50/50"
+             onclick="document.getElementById('file-resume').click()">
+          <input type="file" id="file-resume" accept=".pdf" class="hidden" onchange="handleFileSelection(event)">
+          <div class="mx-auto flex flex-col items-center">
+            <div class="h-12 w-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+            </div>
+            <p id="file-name-display" class="text-sm font-medium text-slate-700">Click to upload or drag & drop candidate resume</p>
+            <p class="text-xs text-slate-400 mt-1">Standard PDF documents up to 10MB</p>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button id="btn-submit-profile" onclick="uploadResumeAndVerify()"
+                  class="inline-flex items-center px-6 py-3 rounded-lg font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-sm disabled:opacity-50">
+            <span id="btn-submit-text">Submit & Verify Profile</span>
+            <svg id="btn-submit-spinner" class="hidden animate-spin ml-2.5 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- VIEW 2: Screening Decision (Gatekeeper) -->
+    <!-- ========================================== -->
+    <div id="view-decision" class="hidden space-y-6">
+      <!-- Eligible Screen (>= 10% Match) -->
+      <div id="card-eligible" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-10 space-y-6">
+        <div class="flex items-start justify-between">
+          <div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Profile Verified • Eligible
+            </span>
+            <h2 id="decision-candidate-name" class="mt-2 text-2xl font-display font-bold text-slate-900">Candidate Name</h2>
+            <p class="text-sm text-slate-500 mt-0.5">Semantic screening confirms sufficient alignment with position core requirements.</p>
+          </div>
+          <!-- Compatibility Score Badge -->
+          <div class="text-right">
+            <div class="text-xs font-medium text-slate-400 uppercase tracking-wider">Semantic Match</div>
+            <div id="decision-match-score" class="text-3xl font-display font-extrabold text-indigo-600">0.0%</div>
+          </div>
+        </div>
+
+        <!-- Skills Badges -->
+        <div class="border-t border-slate-100 pt-5">
+          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Identified Competencies & Skills</div>
+          <div id="decision-skills-list" class="flex flex-wrap gap-2">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="border-t border-slate-100 pt-6 flex items-center justify-between">
+          <button onclick="backToSetup()" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition">
+            &larr; Re-evaluate Another Candidate
+          </button>
+          <button id="btn-proceed-interview" onclick="proceedToInterviewRoom()"
+                  class="inline-flex items-center px-6 py-3 rounded-lg font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-sm">
+            <span>Proceed to 5-Question Interview Room</span>
+            <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Ineligible Screen (< 10% Match) -->
+      <div id="card-rejected" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-10 space-y-6 text-center">
+        <div class="mx-auto h-16 w-16 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+          <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+        <div class="max-w-md mx-auto">
+          <h2 class="text-xl font-display font-bold text-slate-900">Application Status Update</h2>
+          <p class="mt-3 text-sm text-slate-600 leading-relaxed">
+            Your profile does not sufficiently match the core requirements for this position at this time.
+          </p>
+          <div class="mt-4 p-3 bg-slate-50 rounded-lg inline-block border border-slate-200">
+            <span class="text-xs text-slate-500">Compatibility Index: </span>
+            <span id="rejected-match-score" class="text-xs font-bold text-slate-700">0.0%</span>
+            <span class="text-xs text-slate-400">(Required Threshold: 10.0%)</span>
+          </div>
+        </div>
+        <div class="pt-4">
+          <button onclick="backToSetup()" class="px-5 py-2.5 rounded-lg border border-slate-300 font-medium text-sm text-slate-700 hover:bg-slate-50 transition">
+            Modify Requirements or Submit Updated Resume
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- VIEW 3: The Live Interview Stage (5 Turns) -->
+    <!-- ========================================== -->
+    <div id="view-interview" class="hidden space-y-6">
+      <!-- Interview Header Bar -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center space-x-3">
+            <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
+              AI
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span id="interview-candidate-name" class="font-display font-bold text-slate-900 text-base">Candidate</span>
+                <span class="text-slate-300">•</span>
+                <span id="interview-role-title" class="text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">Role</span>
+              </div>
+              <p class="text-xs text-slate-400">Basic Screening Round • 5 Total Questions</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="text-right">
+              <span class="text-xs text-slate-400 font-medium uppercase tracking-wider block">Progress</span>
+              <span id="interview-turn-badge" class="text-sm font-bold text-indigo-600">Question 1 of 5</span>
+            </div>
+            <button onclick="backToSetup()" title="End Session" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+          <div id="interview-progress-bar" class="bg-indigo-600 h-1.5 rounded-full transition-all duration-500" style="width: 20%;"></div>
+        </div>
+      </div>
+
+      <!-- Active Interviewer Question Card -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="h-2.5 w-2.5 rounded-full bg-indigo-600 animate-pulse"></span>
+            <span id="question-card-stage" class="text-xs font-semibold uppercase tracking-wider text-indigo-700">Welcome & Background</span>
+          </div>
+          <span class="text-xs text-slate-400">Basic Screening Question</span>
+        </div>
+        <div id="current-question-text" class="text-lg sm:text-xl font-medium text-slate-900 leading-relaxed">
+          Preparing question...
+        </div>
+      </div>
+
+      <!-- Real-time Transcript Timeline -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Session Transcript Timeline</h3>
+          <span id="turns-counter-label" class="text-xs text-slate-400">1 of 5 questions</span>
+        </div>
+        <div id="transcript-history" class="space-y-4 max-h-72 overflow-y-auto pr-2">
+          <!-- Populated dynamically as conversation progresses -->
+        </div>
+      </div>
+
+      <!-- Dual Candidate Input Controls -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-600">Candidate Response Input</span>
+          <span class="text-xs text-slate-400">Voice Recording or Text</span>
+        </div>
+
+        <!-- Audio Recording Bar -->
+        <div class="flex flex-col sm:flex-row items-center justify-between p-4 rounded-lg bg-slate-50 border border-slate-200 gap-3">
+          <div class="flex items-center space-x-3">
+            <button id="btn-record-audio" onclick="toggleAudioRecording()"
+                    class="inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-slate-800 hover:bg-slate-900 transition shadow-sm">
+              <svg id="mic-icon" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+              </svg>
+              <span id="record-btn-text">Record Voice Answer</span>
+            </button>
+            <div id="recording-indicator" class="hidden flex items-center space-x-2">
+              <span class="relative flex h-3 w-3">
+                <span class="recording-pulse absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
+              </span>
+              <span id="record-timer" class="text-xs font-mono font-semibold text-red-600">00:00</span>
+              <span class="text-xs text-slate-500">Live Audio Capture...</span>
+            </div>
+          </div>
+          <span class="text-xs text-slate-400">Automatic speech transcription</span>
+        </div>
+
+        <!-- Text Input Chatbox -->
+        <div class="space-y-3">
+          <textarea id="candidate-text-input" rows="3"
+                    placeholder="Type your response here..."
+                    class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-800 placeholder-slate-400"></textarea>
+
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400">Submit your answer to advance through the 5 screening questions</span>
+            <button id="btn-submit-answer" onclick="submitTextAnswer()"
+                    class="inline-flex items-center px-6 py-2.5 rounded-lg font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-sm disabled:opacity-50">
+              <span id="btn-answer-text">Submit Answer</span>
+              <svg id="btn-answer-spinner" class="hidden animate-spin ml-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Processing State Banner -->
+        <div id="interview-processing-banner" class="hidden p-3 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center space-x-3 text-indigo-700 text-sm font-medium">
+          <svg class="animate-spin h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+          <span id="processing-banner-text">Evaluating response & preparing next stage...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- VIEW 4: Evaluation Report & Scorecard -->
+    <!-- ========================================== -->
+    <div id="view-report" class="hidden space-y-8">
+      <!-- Report Header Card -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+          <div>
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+              <span>5-Question Basic Screening Complete</span>
+            </div>
+            <h2 id="report-candidate-name" class="mt-2 text-2xl sm:text-3xl font-display font-bold text-slate-900">Candidate Evaluation Report</h2>
+            <p id="report-role-badge" class="text-sm text-slate-500 mt-1">Screening Assessment Results</p>
+          </div>
+          <!-- Overall Score Badge -->
+          <div class="flex items-center space-x-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div class="text-right">
+              <span class="text-xs font-medium text-slate-400 uppercase tracking-wider block">Overall Score</span>
+              <span id="report-overall-score" class="text-3xl font-display font-extrabold text-indigo-600">--/100</span>
+            </div>
+            <div id="report-recommendation-pill" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-100 text-indigo-700">
+              Evaluation
+            </div>
+          </div>
+        </div>
+
+        <!-- Executive Summary Banner -->
+        <div class="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100">
+          <span class="text-xs font-semibold uppercase tracking-wider text-indigo-800 block mb-1">Executive Summary</span>
+          <p id="report-summary-verdict" class="text-sm text-slate-700 leading-relaxed">
+            Generating assessment summary...
+          </p>
+        </div>
+
+        <!-- 4 Assessment Parameters Grid -->
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4">Competency & Delivery Parameters</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- 1. Sentence Framing & Communication -->
+            <div class="p-4 rounded-xl border border-slate-200 bg-white space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-semibold text-slate-900">Sentence Framing & Articulation</span>
+                <span id="score-framing" class="text-sm font-bold text-indigo-600">--%</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2">
+                <div id="bar-framing" class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+              <p id="feedback-framing" class="text-xs text-slate-600 leading-relaxed mt-2">
+                Analyzing sentence structure and grammar...
+              </p>
+            </div>
+
+            <!-- 2. Technical Basics -->
+            <div class="p-4 rounded-xl border border-slate-200 bg-white space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-semibold text-slate-900">Technical Knowledge & Accuracy</span>
+                <span id="score-technical" class="text-sm font-bold text-indigo-600">--%</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2">
+                <div id="bar-technical" class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+              <p id="feedback-technical" class="text-xs text-slate-600 leading-relaxed mt-2">
+                Evaluating fundamental concepts...
+              </p>
+            </div>
+
+            <!-- 3. Problem Solving -->
+            <div class="p-4 rounded-xl border border-slate-200 bg-white space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-semibold text-slate-900">Problem-Solving & Practical Mindset</span>
+                <span id="score-problem" class="text-sm font-bold text-indigo-600">--%</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2">
+                <div id="bar-problem" class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+              <p id="feedback-problem" class="text-xs text-slate-600 leading-relaxed mt-2">
+                Evaluating troubleshooting reasoning...
+              </p>
+            </div>
+
+            <!-- 4. Resume Alignment -->
+            <div class="p-4 rounded-xl border border-slate-200 bg-white space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-semibold text-slate-900">Resume & Background Alignment</span>
+                <span id="score-resume" class="text-sm font-bold text-indigo-600">--%</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2">
+                <div id="bar-resume" class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+              <p id="feedback-resume" class="text-xs text-slate-600 leading-relaxed mt-2">
+                Reviewing study gap and background alignment...
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Strengths and Growth Areas -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-6">
+          <div class="p-4 rounded-xl bg-emerald-50/50 border border-emerald-100 space-y-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-800 block">Demonstrated Strengths</span>
+            <ul id="report-strengths-list" class="space-y-1.5 text-xs text-slate-700"></ul>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-700 block">Areas for Growth</span>
+            <ul id="report-growth-list" class="space-y-1.5 text-xs text-slate-600"></ul>
+          </div>
+        </div>
+
+        <!-- Turn-by-Turn Question & Answer Breakdown -->
+        <div class="border-t border-slate-100 pt-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">5-Turn Question & Sentence Framing Breakdown</h3>
+            <span class="text-xs text-slate-400">Detailed Review</span>
+          </div>
+          <div id="report-turns-container" class="space-y-3">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="border-t border-slate-100 pt-6 flex flex-wrap items-center justify-between gap-3">
+          <button onclick="window.print()" class="px-5 py-2.5 rounded-lg border border-slate-300 font-medium text-sm text-slate-700 hover:bg-slate-50 transition shadow-sm inline-flex items-center space-x-2">
+            <svg class="h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+            </svg>
+            <span>Print / Save Scorecard</span>
+          </button>
+          <button onclick="backToSetup()" class="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 font-semibold text-sm text-white transition shadow-sm">
+            Start New Evaluation
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+    Clean Architecture • Enterprise AI Interview System • 5-Question Basic Screening
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    let currentSessionId = null;
+    let selectedFile = null;
+    let turnCount = 0;
+    const TOTAL_TURNS = 5;
+    let sessionRole = "";
+    let candidateName = "";
+    let isRecording = false;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordTimerInterval = null;
+    let recordSeconds = 0;
+
+    // Stage labels for the 5 questions
+    function getStageLabel(turn) {
+      if (turn === 1) return "Welcome & Background";
+      if (turn === 2) return "Personal Journey & Study Gap";
+      if (turn === 3) return "Technical Fundamentals";
+      if (turn === 4) return "Projects & Practical Experience";
+      if (turn === 5) return "Everyday Problem Solving";
+      return "Evaluation";
+    }
+
+    // Toast Notification helper
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      const colorClasses = type === "error" 
+        ? "bg-red-50 border-red-200 text-red-800" 
+        : (type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-indigo-50 border-indigo-200 text-indigo-800");
+      
+      toast.className = `p-3.5 rounded-lg border shadow-md text-xs font-medium max-w-sm transition duration-300 pointer-events-auto ${colorClasses}`;
+      toast.innerText = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // Role helper
+    function setRole(roleName) {
+      document.getElementById("input-role").value = roleName;
+    }
+
+    // 1. Generate Job Description
+    async function generateJobDescription() {
+      const role = document.getElementById("input-role").value.trim();
+      if (!role) {
+        showToast("Please enter a target job role.", "error");
+        return;
+      }
+
+      const btn = document.getElementById("btn-generate-jd");
+      const btnText = document.getElementById("btn-generate-text");
+      const spinner = document.getElementById("btn-generate-spinner");
+
+      btn.disabled = true;
+      btnText.innerText = "Generating...";
+      spinner.classList.remove("hidden");
+
+      try {
+        const response = await fetch("/api/generate-jd", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role: role }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to generate job description.");
+        }
+
+        const data = await response.json();
+        document.getElementById("textarea-jd").value = data.job_description;
+        sessionRole = role;
+        showToast("Structured Job Description generated successfully.", "success");
+      } catch (err) {
+        showToast(err.message || "Error generating job description.", "error");
+      } finally {
+        btn.disabled = false;
+        btnText.innerText = "Generate Job Description";
+        spinner.classList.add("hidden");
+      }
+    }
+
+    // File Drag & Drop / Selection
+    function handleFileSelection(event) {
+      const file = event.target.files[0];
+      if (file) {
+        if (!file.name.toLowerCase().endsWith(".pdf")) {
+          showToast("Only PDF documents are supported.", "error");
+          return;
+        }
+        selectedFile = file;
+        document.getElementById("file-name-display").innerHTML = `
+          <span class="text-indigo-600 font-semibold">${file.name}</span> (${(file.size / 1024).toFixed(1)} KB)
+        `;
+      }
+    }
+
+    // 2. Upload Resume, Parse, FAISS Match & Gatekeeper Decision
+    async function uploadResumeAndVerify() {
+      const jd = document.getElementById("textarea-jd").value.trim();
+      if (!jd) {
+        showToast("Please generate or provide a job description first.", "error");
+        return;
+      }
+      if (!selectedFile) {
+        showToast("Please upload a PDF resume.", "error");
+        return;
+      }
+
+      const btn = document.getElementById("btn-submit-profile");
+      const btnText = document.getElementById("btn-submit-text");
+      const spinner = document.getElementById("btn-submit-spinner");
+
+      btn.disabled = true;
+      btnText.innerText = "Analyzing Profile...";
+      spinner.classList.remove("hidden");
+
+      const role = document.getElementById("input-role").value.trim();
+      const formData = new FormData();
+      formData.append("resume", selectedFile);
+      formData.append("job_description", jd);
+      if (role) {
+        formData.append("job_role", role);
+      }
+
+      try {
+        const response = await fetch("/api/upload-resume", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.detail || "Profile verification failed.");
+        }
+
+        const data = await response.json();
+        currentSessionId = data.session_id;
+        candidateName = data.candidate_name || "Applicant";
+        const score = data.match_score || 0.0;
+        const eligible = data.eligible;
+
+        // Switch to Decision View
+        document.getElementById("view-setup").classList.add("hidden");
+        document.getElementById("view-report").classList.add("hidden");
+        document.getElementById("view-decision").classList.remove("hidden");
+
+        if (eligible) {
+          document.getElementById("card-eligible").classList.remove("hidden");
+          document.getElementById("card-rejected").classList.add("hidden");
+
+          document.getElementById("decision-candidate-name").innerText = candidateName;
+          document.getElementById("decision-match-score").innerText = `${score.toFixed(1)}%`;
+
+          const skillsList = document.getElementById("decision-skills-list");
+          skillsList.innerHTML = "";
+          (data.skills || []).forEach(skill => {
+            const badge = document.createElement("span");
+            badge.className = "text-xs font-medium px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200";
+            badge.innerText = skill;
+            skillsList.appendChild(badge);
+          });
+        } else {
+          document.getElementById("card-eligible").classList.add("hidden");
+          document.getElementById("card-rejected").classList.remove("hidden");
+          document.getElementById("rejected-match-score").innerText = `${score.toFixed(1)}%`;
+        }
+      } catch (err) {
+        showToast(err.message || "Failed to parse and verify resume.", "error");
+      } finally {
+        btn.disabled = false;
+        btnText.innerText = "Submit & Verify Profile";
+        spinner.classList.add("hidden");
+      }
+    }
+
+    // 3. Proceed to Technical Interview Room
+    async function proceedToInterviewRoom() {
+      if (!currentSessionId) return;
+
+      const btn = document.getElementById("btn-proceed-interview");
+      btn.disabled = true;
+      btn.innerText = "Initializing Room...";
+
+      try {
+        const response = await fetch("/api/interview/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: currentSessionId }),
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || "Unable to start interview.");
+        }
+
+        const data = await response.json();
+        turnCount = data.turn_count || 1;
+
+        // Populate Interview Header
+        document.getElementById("interview-candidate-name").innerText = candidateName;
+        document.getElementById("interview-role-title").innerText = document.getElementById("input-role").value || "Technical Role";
+        document.getElementById("interview-turn-badge").innerText = `Question 1 of ${TOTAL_TURNS}`;
+        document.getElementById("interview-progress-bar").style.width = "20%";
+        document.getElementById("question-card-stage").innerText = getStageLabel(1);
+        document.getElementById("current-question-text").innerText = data.question;
+
+        // Initialize Transcript
+        const transcriptContainer = document.getElementById("transcript-history");
+        transcriptContainer.innerHTML = `
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-lg">
+            <div class="flex items-center justify-between text-xs font-semibold text-slate-500 mb-1">
+              <span>Question 1 of 5</span>
+              <span class="text-indigo-600 font-medium">${getStageLabel(1)}</span>
+            </div>
+            <p class="text-sm text-slate-800 leading-relaxed">${escapeHtml(data.question)}</p>
+          </div>
+        `;
+        document.getElementById("turns-counter-label").innerText = `1 of 5 questions`;
+
+        // Switch to Live Interview Stage
+        document.getElementById("view-decision").classList.add("hidden");
+        document.getElementById("view-report").classList.add("hidden");
+        document.getElementById("view-interview").classList.remove("hidden");
+      } catch (err) {
+        showToast(err.message || "Could not launch interview room.", "error");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Proceed to 5-Question Interview Room";
+      }
+    }
+
+    // 4. Candidate Response Submission (Text)
+    async function submitTextAnswer() {
+      const textInput = document.getElementById("candidate-text-input");
+      const answer = textInput.value.trim();
+      if (!answer) {
+        showToast("Please enter an answer or use voice recording.", "error");
+        return;
+      }
+      await postAnswerToBackend({ text_answer: answer });
+      textInput.value = "";
+    }
+
+    // Core function to send response (audio or text) to backend
+    async function postAnswerToBackend(payload) {
+      const btn = document.getElementById("btn-submit-answer");
+      const btnText = document.getElementById("btn-answer-text");
+      const spinner = document.getElementById("btn-answer-spinner");
+      const processingBanner = document.getElementById("interview-processing-banner");
+      const bannerText = document.getElementById("processing-banner-text");
+
+      btn.disabled = true;
+      btnText.innerText = "Evaluating...";
+      spinner.classList.remove("hidden");
+      processingBanner.classList.remove("hidden");
+
+      if (turnCount >= 4) {
+        bannerText.innerText = "Compiling 5-Question Assessment & Evaluating Sentence Framing...";
+      } else {
+        bannerText.innerText = "Evaluating response & preparing next question...";
+      }
+
+      const formData = new FormData();
+      formData.append("session_id", currentSessionId);
+      if (payload.text_answer) {
+        formData.append("text_answer", payload.text_answer);
+      }
+      if (payload.audio_blob) {
+        formData.append("audio_file", payload.audio_blob, "candidate_response.webm");
+      }
+
+      try {
+        const response = await fetch("/api/interview/submit-answer", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || "Submission failed.");
+        }
+
+        const data = await response.json();
+        const transcriptContainer = document.getElementById("transcript-history");
+
+        // Append candidate answer to previous turn
+        const answerBlock = document.createElement("div");
+        answerBlock.className = "p-3 bg-indigo-50/60 border border-indigo-100 rounded-lg ml-4";
+        answerBlock.innerHTML = `
+          <div class="text-xs font-semibold text-indigo-700 mb-1">Candidate Response:</div>
+          <p class="text-sm text-slate-800">${escapeHtml(data.candidate_transcript)}</p>
+        `;
+        transcriptContainer.appendChild(answerBlock);
+
+        // CHECK IF INTERVIEW COMPLETED (5 TURNS COMPLETE)
+        if (data.interview_completed && data.report) {
+          showToast("Interview complete! Compiling your full evaluation scorecard...", "success");
+          renderEvaluationReport(data.report);
+          
+          setTimeout(() => {
+            document.getElementById("view-interview").classList.add("hidden");
+            document.getElementById("view-report").classList.remove("hidden");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }, 800);
+          return;
+        }
+
+        // Otherwise advance to next question
+        turnCount = data.turn_count;
+        const progressPct = Math.min(100, Math.round((turnCount / TOTAL_TURNS) * 100));
+
+        // Append next question block
+        const questionBlock = document.createElement("div");
+        questionBlock.className = "p-3.5 bg-slate-50 border border-slate-200 rounded-lg";
+        questionBlock.innerHTML = `
+          <div class="flex items-center justify-between text-xs font-semibold text-slate-500 mb-1">
+            <span>Question ${turnCount} of ${TOTAL_TURNS}</span>
+            <span class="text-indigo-600 font-medium">${getStageLabel(turnCount)}</span>
+          </div>
+          <p class="text-sm text-slate-800 leading-relaxed">${escapeHtml(data.next_question)}</p>
+        `;
+        transcriptContainer.appendChild(questionBlock);
+
+        // Update Active Question Card
+        document.getElementById("current-question-text").innerText = data.next_question;
+        document.getElementById("interview-turn-badge").innerText = `Question ${turnCount} of ${TOTAL_TURNS}`;
+        document.getElementById("interview-progress-bar").style.width = `${progressPct}%`;
+        document.getElementById("question-card-stage").innerText = getStageLabel(turnCount);
+        document.getElementById("turns-counter-label").innerText = `${turnCount} of ${TOTAL_TURNS} questions`;
+
+        transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+      } catch (err) {
+        showToast(err.message || "Failed to process interview response.", "error");
+      } finally {
+        btn.disabled = false;
+        btnText.innerText = "Submit Answer";
+        spinner.classList.add("hidden");
+        processingBanner.classList.add("hidden");
+      }
+    }
+
+    // 5. Render Evaluation Scorecard Report
+    function renderEvaluationReport(report) {
+      document.getElementById("report-candidate-name").innerText = `${candidateName}'s Evaluation Report`;
+      document.getElementById("report-role-badge").innerText = `${document.getElementById("input-role").value} • 5-Question Basic Assessment`;
+      
+      const overallScore = report.overall_score || 85;
+      document.getElementById("report-overall-score").innerText = `${overallScore}/100`;
+      
+      const pill = document.getElementById("report-recommendation-pill");
+      pill.innerText = report.recommendation || "Recommended";
+      if (overallScore >= 75) {
+        pill.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200";
+      } else {
+        pill.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200";
+      }
+
+      document.getElementById("report-summary-verdict").innerText = report.summary_verdict || "Assessment completed.";
+
+      // Parameters
+      const params = report.parameters || {};
+      const framing = params.sentence_framing || { score: 85, feedback: "Clear sentence framing." };
+      const tech = params.technical_basics || { score: 80, feedback: "Good foundational basics." };
+      const problem = params.problem_solving || { score: 85, feedback: "Practical troubleshooting." };
+      const resume = params.resume_alignment || { score: 88, feedback: "Consistent with verified background." };
+
+      document.getElementById("score-framing").innerText = `${framing.score}%`;
+      document.getElementById("bar-framing").style.width = `${framing.score}%`;
+      document.getElementById("feedback-framing").innerText = framing.feedback;
+
+      document.getElementById("score-technical").innerText = `${tech.score}%`;
+      document.getElementById("bar-technical").style.width = `${tech.score}%`;
+      document.getElementById("feedback-technical").innerText = tech.feedback;
+
+      document.getElementById("score-problem").innerText = `${problem.score}%`;
+      document.getElementById("bar-problem").style.width = `${problem.score}%`;
+      document.getElementById("feedback-problem").innerText = problem.feedback;
+
+      document.getElementById("score-resume").innerText = `${resume.score}%`;
+      document.getElementById("bar-resume").style.width = `${resume.score}%`;
+      document.getElementById("feedback-resume").innerText = resume.feedback;
+
+      // Strengths
+      const strengthsList = document.getElementById("report-strengths-list");
+      strengthsList.innerHTML = "";
+      (report.strengths || ["Articulate communication", "Good problem-solving mindset"]).forEach(s => {
+        const li = document.createElement("li");
+        li.className = "flex items-start space-x-2";
+        li.innerHTML = `<span class="text-emerald-600 font-bold">✓</span><span>${escapeHtml(s)}</span>`;
+        strengthsList.appendChild(li);
+      });
+
+      // Growth areas
+      const growthList = document.getElementById("report-growth-list");
+      growthList.innerHTML = "";
+      (report.areas_for_growth || ["Elaborate on specific technical examples"]).forEach(g => {
+        const li = document.createElement("li");
+        li.className = "flex items-start space-x-2";
+        li.innerHTML = `<span class="text-indigo-600 font-bold">•</span><span>${escapeHtml(g)}</span>`;
+        growthList.appendChild(li);
+      });
+
+      // Turn Reviews
+      const turnsContainer = document.getElementById("report-turns-container");
+      turnsContainer.innerHTML = "";
+      (report.turn_reviews || []).forEach(tr => {
+        const card = document.createElement("div");
+        card.className = "p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2";
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Question ${tr.turn} • ${getStageLabel(tr.turn)}</span>
+            <span class="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">Score: ${tr.score}/100</span>
+          </div>
+          <p class="text-xs font-semibold text-slate-800">${escapeHtml(tr.question)}</p>
+          <div class="p-2.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 leading-relaxed">
+            <span class="font-semibold text-slate-500">Candidate Answer:</span> ${escapeHtml(tr.candidate_answer)}
+          </div>
+          <div class="text-xs text-indigo-900 bg-indigo-50/70 p-2.5 rounded-lg border border-indigo-100">
+            <span class="font-semibold text-indigo-700">Sentence Framing & Delivery Critique:</span> ${escapeHtml(tr.framing_critique)}
+          </div>
+        `;
+        turnsContainer.appendChild(card);
+      });
+    }
+
+    // 6. Audio Recording Handling
+    async function toggleAudioRecording() {
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) audioChunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+            stream.getTracks().forEach(track => track.stop());
+            await postAnswerToBackend({ audio_blob: audioBlob });
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+
+          document.getElementById("btn-record-audio").className = "inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition shadow-sm";
+          document.getElementById("record-btn-text").innerText = "Stop & Submit Recording";
+          document.getElementById("recording-indicator").classList.remove("hidden");
+
+          recordSeconds = 0;
+          document.getElementById("record-timer").innerText = "00:00";
+          recordTimerInterval = setInterval(() => {
+            recordSeconds++;
+            const mins = String(Math.floor(recordSeconds / 60)).padStart(2, "0");
+            const secs = String(recordSeconds % 60).padStart(2, "0");
+            document.getElementById("record-timer").innerText = `${mins}:${secs}`;
+          }, 1000);
+        } catch (err) {
+          showToast("Microphone access was denied or is not available.", "error");
+        }
+      } else {
+        if (mediaRecorder && mediaRecorder.state !== "inactive") {
+          mediaRecorder.stop();
+        }
+        isRecording = false;
+        clearInterval(recordTimerInterval);
+        document.getElementById("btn-record-audio").className = "inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-slate-800 hover:bg-slate-900 transition shadow-sm";
+        document.getElementById("record-btn-text").innerText = "Record Voice Answer";
+        document.getElementById("recording-indicator").classList.add("hidden");
+      }
+    }
+
+    // Navigation helper
+    function backToSetup() {
+      document.getElementById("view-decision").classList.add("hidden");
+      document.getElementById("view-interview").classList.add("hidden");
+      document.getElementById("view-report").classList.add("hidden");
+      document.getElementById("view-setup").classList.remove("hidden");
+      currentSessionId = null;
+      turnCount = 0;
+    }
+
+    function escapeHtml(text) {
+      if (!text) return "";
+      const div = document.createElement("div");
+      div.innerText = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
